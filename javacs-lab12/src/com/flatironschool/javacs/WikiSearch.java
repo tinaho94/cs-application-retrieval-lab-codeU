@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import redis.clients.jedis.Jedis;
 
@@ -60,8 +61,18 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch or(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String, Integer> newMap = new HashMap<String, Integer>();
+		for(String s : map.keySet()){
+			int a = map.get(s);
+			int b = that.getRelevance(s); 
+			newMap.put(s, a + b);
+		}
+		for(String s : that.map.keySet()){
+			if(!newMap.containsKey(s)){
+				newMap.put(s, that.map.get(s));
+			}
+		 }
+		 return new WikiSearch(newMap);
 	}
 	
 	/**
@@ -71,8 +82,23 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch and(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		 Map<String, Integer> newMap = new HashMap<String, Integer>();
+		 for(String s : map.keySet()){
+			 int a = map.get(s);
+			 int b = that.getRelevance(s); 
+			 if(a != 0 && b != 0){ 
+				 newMap.put(s, a + b);
+			 }
+			 else{
+				 newMap.put(s, 0);
+			 }
+		 }
+		 for(String s : that.map.keySet()){
+		 	if(!newMap.containsKey(s)){
+		 		newMap.put(s, 0);
+		 	}
+		 }
+		 return new WikiSearch(newMap);
 	}
 	
 	/**
@@ -82,8 +108,24 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch minus(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String, Integer> newMap = new HashMap<String, Integer>();
+		for(String s : map.keySet()){
+			int a = map.get(s);
+			int b = that.getRelevance(s); 
+			int diff = a - b;
+			if(diff > 0){
+				newMap.put(s, diff);
+			}
+			else{
+				newMap.put(s, 0);
+		 	}
+		}
+		for(String s : that.map.keySet()){
+			if(!newMap.containsKey(s)){
+				newMap.put(s, 0);
+		 	}
+		}
+		return new WikiSearch(newMap);
 	}
 	
 	/**
@@ -97,15 +139,29 @@ public class WikiSearch {
 		// simple starting place: relevance is the sum of the term frequencies.
 		return rel1 + rel2;
 	}
-
+	
+	Comparator<Entry<String, Integer>> comparator = new Comparator<Entry<String, Integer>>() {
+		@Override
+		public int compare(Entry<String, Integer> entry1, Entry<String, Integer> entry2) {
+			if (entry1.getValue() < entry2.getValue()) {
+				return -1;
+			}
+			if (entry1.getValue() > entry2.getValue()) {
+				return 1;
+			}
+			return 0;
+		}
+	};
 	/**
 	 * Sort the results by relevance.
 	 * 
 	 * @return List of entries with URL and relevance.
 	 */
 	public List<Entry<String, Integer>> sort() {
-        // FILL THIS IN!
-		return null;
+		Set<Map.Entry<String,Integer>> set = map.entrySet();
+		List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(set);
+		Collections.sort(list, comparator);
+		return list;
 	}
 
 	/**
